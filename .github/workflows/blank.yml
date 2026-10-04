@@ -1,0 +1,53 @@
+name: Build FiveM
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build FiveM
+    runs-on: windows-latest
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Mostrar ambiente
+        shell: powershell
+        run: |
+          Write-Host "Windows:"
+          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion
+          Write-Host ""
+          Write-Host "Projeto:"
+          Get-ChildItem
+
+      - name: Preparar pasta de build
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path build
+
+      - name: Copiar arquivos
+        shell: powershell
+        run: |
+          Copy-Item -Path * -Destination build -Recurse -Force `
+            -Exclude ".git",".github","build"
+
+      - name: Criar ZIP
+        shell: powershell
+        run: |
+          Compress-Archive `
+            -Path build\* `
+            -DestinationPath FiveM-build.zip `
+            -Force
+
+      - name: Enviar build
+        uses: actions/upload-artifact@v4
+        with:
+          name: FiveM-build
+          path: FiveM-build.zip
